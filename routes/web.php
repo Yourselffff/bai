@@ -28,8 +28,24 @@ Route::get('/', function () {
     return redirect()->route('ideas.index');
 });
 
+// ------------- Privacy / RGPD pages (public) -------------
+Route::get('/privacy/charter', [App\Http\Controllers\PrivacyController::class, 'charter'])
+    ->name('privacy.charter');
+Route::get('/privacy/consent', [App\Http\Controllers\PrivacyController::class, 'consent'])
+    ->name('privacy.consent');
+
 // ------------- Protected routes (authentication required) -------------
 Route::middleware(['auth'])->group(function () {
+
+    // Cookie consent routes
+    Route::post('/cookie/accept', [App\Http\Controllers\CookieConsentController::class, 'accept'])
+        ->name('cookie.accept');
+    Route::post('/cookie/refuse', [App\Http\Controllers\CookieConsentController::class, 'refuse'])
+        ->name('cookie.refuse');
+
+    // Update consent from privacy page
+    Route::post('/privacy/update-consent', [App\Http\Controllers\PrivacyController::class, 'updateConsent'])
+        ->name('privacy.update-consent');
 
     // Full CRUD for ideas
     Route::resource('ideas', IdeaController::class);

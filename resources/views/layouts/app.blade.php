@@ -13,7 +13,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="bg-gray-100">
+<body class="bg-gray-100" style="display: flex; flex-direction: column; min-height: 100vh;">
 
 {{-- Top navigation bar --}}
 <nav class="bg-white shadow mb-6">
@@ -44,9 +44,29 @@
 </nav>
 
 {{-- Main content section --}}
-<main class="max-w-7xl mx-auto px-4">
+<main style="flex: 1;">
     @yield('content')
 </main>
+
+{{-- Footer --}}
+<footer class="w-full bg-white border-t mt-8">
+    <div class="max-w-7xl mx-auto px-4 py-4">
+        <div class="flex justify-center items-center gap-8 text-sm text-gray-600">
+            <span>&copy; 2026 BAI Sandbox</span>
+            <span class="text-gray-400">|</span>
+            <a href="{{ route('privacy.charter') }}" class="hover:text-blue-600 hover:underline">
+                Charte RGPD
+            </a>
+            <span class="text-gray-400">|</span>
+            <a href="{{ route('privacy.consent') }}" class="hover:text-blue-600 hover:underline">
+                Gestion des cookies
+            </a>
+        </div>
+    </div>
+</footer>
+
+{{-- Bandeau de consentement des cookies --}}
+<x-cookie-consent-banner />
 
 </body>
 </html>
