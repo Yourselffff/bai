@@ -38,13 +38,56 @@ class CommentController extends Controller
     }
 
     /**
+     * Show edit form for a comment.
+     * Le propriétaire peut modifier son commentaire.
+     * L'admin peut modérer (modifier n'importe quel commentaire).
+     */
+    public function edit(Idea $idea, Comment $comment)
+    {
+        $user = Auth::user();
+
+        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
+        return view('comments.edit', compact('idea', 'comment'));
+    }
+
+    /**
+     * Update a comment.
+     * Le propriétaire peut modifier son commentaire.
+     * L'admin peut modérer (modifier n'importe quel commentaire).
+     */
+    public function update(Request $request, Idea $idea, Comment $comment)
+    {
+        $user = Auth::user();
+
+        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
+        $comment->update([
+            'description' => $request->input('description'),
+        ]);
+
+        return redirect()
+            ->route('ideas.show', $idea)
+            ->with('status', 'Comment updated.');
+    }
+
+    /**
      * Remove a comment.
-     *
-     * NOTE:
-     * - No authorization check ANY user can delete ANY comment (TODO)
+     * Le propriétaire peut supprimer son commentaire.
+     * L'admin peut modérer (supprimer n'importe quel commentaire).
      */
     public function destroy(Idea $idea, Comment $comment)
     {
+        $user = Auth::user();
+
+        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         $comment->delete();
 
         return redirect()

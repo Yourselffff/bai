@@ -24,16 +24,32 @@
         @forelse($ideas as $idea)
             <div class="p-4 bg-white border rounded">
 
-                <h2 class="text-lg font-semibold">
-                    <a href="{{ route('ideas.show', $idea) }}">
-                        {{ $idea->title }}
-                    </a>
-                </h2>
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h2 class="text-lg font-semibold">
+                            <a href="{{ route('ideas.show', $idea) }}">
+                                {{ $idea->title }}
+                            </a>
+                        </h2>
 
-                <p class="text-sm text-gray-600">
-                    By {{ $idea->user?->name ?? 'Unknown' }}
-                    • {{ $idea->created_at->diffForHumans() }}
-                </p>
+                        <p class="text-sm text-gray-600">
+                            By {{ $idea->user?->name ?? 'Unknown' }}
+                            • {{ $idea->created_at->diffForHumans() }}
+                        </p>
+                    </div>
+
+                    {{-- Boutons Edit/Delete pour propriétaire ou admin --}}
+                    @if(auth()->id() === $idea->user_id || auth()->user()->isAdmin())
+                        <div class="flex space-x-2">
+                            <a href="{{ route('ideas.edit', $idea) }}" class="text-blue-600 text-sm">Modifier</a>
+                            <form action="{{ route('ideas.destroy', $idea) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 text-sm">Supprimer</button>
+                            </form>
+                        </div>
+                    @endif
+                </div>
 
                 {{-- SECURITY WARNING:
                      This field is NOT escaped → XSS vulnerability --}}

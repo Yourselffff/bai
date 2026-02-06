@@ -5,6 +5,7 @@ namespace App\Http\Requests\Auth;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -44,6 +45,13 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey(), 600);
 
+            // Log de la tentative de connexion échouée
+            Log::warning('Tentative de connexion échouée', [
+                'email' => $this->input('email'),
+                'ip' => $this->ip(),
+                'user_agent' => $this->userAgent(),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
@@ -64,6 +72,13 @@ class LoginRequest extends FormRequest
         }
 
         event(new Lockout($this));
+
+        // Log du blocage de compte
+        Log::warning('Compte bloqué - trop de tentatives', [
+            'email' => $this->input('email'),
+            'ip' => $this->ip(),
+            'user_agent' => $this->userAgent(),
+        ]);
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 

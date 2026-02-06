@@ -74,20 +74,33 @@ class IdeaController extends Controller
 
     /**
      * Show edit form.
-     *
-     * SECURITY NOTE:
-     * - No authorization: ANY user can edit ANY idea (intentionally vulnerable) (TODO)
+     * Le propriétaire peut modifier son idée.
+     * L'admin peut modérer (modifier n'importe quelle idée).
      */
     public function edit(Idea $idea)
     {
+        $user = Auth::user();
+
+        if ($idea->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         return view('ideas.edit', compact('idea'));
     }
 
     /**
      * Update the idea.
+     * Le propriétaire peut modifier son idée.
+     * L'admin peut modérer (modifier n'importe quelle idée).
      */
     public function update(Request $request, Idea $idea)
     {
+        $user = Auth::user();
+
+        if ($idea->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         $idea->update([
             'title'       => $request->input('title'),
             'description' => $request->input('description'),
@@ -101,12 +114,17 @@ class IdeaController extends Controller
 
     /**
      * Remove an idea.
-     *
-     * SECURITY NOTE:
-     * - No authorization check  ANY user can delete ANY idea (TODO)
+     * Le propriétaire peut supprimer son idée.
+     * L'admin peut modérer (supprimer n'importe quelle idée).
      */
     public function destroy(Idea $idea)
     {
+        $user = Auth::user();
+
+        if ($idea->user_id !== $user->id && !$user->isAdmin()) {
+            abort(403, 'Accès non autorisé.');
+        }
+
         $idea->delete();
 
         return redirect()

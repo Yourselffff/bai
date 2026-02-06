@@ -31,18 +31,20 @@
                 {!! nl2br($idea->description) !!}
             </div>
 
-            {{-- Edit / Delete --}}
-            <div class="mt-4 flex space-x-3">
-                <a href="{{ route('ideas.edit', $idea) }}"
-                   class="text-blue-600">Edit</a>
+            {{-- Edit / Delete pour propriétaire ou admin --}}
+            @if(auth()->id() === $idea->user_id || auth()->user()->isAdmin())
+                <div class="mt-4 flex space-x-3">
+                    <a href="{{ route('ideas.edit', $idea) }}"
+                       class="text-blue-600">Modifier</a>
 
-                <form action="{{ route('ideas.destroy', $idea) }}"
-                      method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button class="text-red-600">Delete</button>
-                </form>
-            </div>
+                    <form action="{{ route('ideas.destroy', $idea) }}"
+                          method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button class="text-red-600">Supprimer</button>
+                    </form>
+                </div>
+            @endif
 
         </div>
 
@@ -81,14 +83,20 @@
                         {!! nl2br($comment->description) !!}
                     </div>
 
-                    <form action="{{ route('comments.destroy', [$idea, $comment]) }}"
-                          method="POST">
-                        @csrf
-                        @method('DELETE')
-                        <button class="text-xs text-red-600 mt-1">
-                            Delete
-                        </button>
-                    </form>
+                    {{-- Edit / Delete pour propriétaire ou admin --}}
+                    @if(auth()->id() === $comment->user_id || auth()->user()->isAdmin())
+                        <div class="flex space-x-2 mt-1">
+                            <a href="{{ route('comments.edit', [$idea, $comment]) }}"
+                               class="text-xs text-blue-600">Modifier</a>
+
+                            <form action="{{ route('comments.destroy', [$idea, $comment]) }}"
+                                  method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button class="text-xs text-red-600">Supprimer</button>
+                            </form>
+                        </div>
+                    @endif
 
                 </div>
 
