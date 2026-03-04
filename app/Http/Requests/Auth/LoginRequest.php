@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Services\ActionLogService;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -45,12 +46,20 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey(), 600);
 
-            // Log de la tentative de connexion échouée
+            // LOG fichier (historique existant)
             Log::warning('Tentative de connexion échouée', [
                 'email' => $this->input('email'),
                 'ip' => $this->ip(),
                 'user_agent' => $this->userAgent(),
             ]);
+
+            // LOG base de données — côté serveur, l'utilisateur ne peut pas modifier ce log
+            // user_id est null car la connexion a échoué (pas d'utilisateur authentifié)
+            ActionLogService::log(
+                action: 'login_failed',
+                userId: null,
+                dataAfter: ['email' => $this->input('email')]
+            );
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),

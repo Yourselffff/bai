@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Idea;
+use App\Services\ActionLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -58,6 +59,17 @@ class IdeaController extends Controller
             'application' => $request->input('application'),
         ]);
 
+        // LOG : création d'une idée — enregistré par le serveur après insertion en base
+        ActionLogService::log(
+            action: 'idea_created',
+            ideaId: $idea->id,
+            dataAfter: [
+                'title'       => $idea->title,
+                'description' => $idea->description,
+                'application' => $idea->application,
+            ]
+        );
+
         return redirect()
             ->route('ideas.show', $idea)
             ->with('status', 'Idea created (vulnerable version).');
@@ -93,11 +105,30 @@ class IdeaController extends Controller
     {
         $this->authorize('update', $idea);
 
+        // Capture de l'état avant modification pour le log
+        $dataBefore = [
+            'title'       => $idea->title,
+            'description' => $idea->description,
+            'application' => $idea->application,
+        ];
+
         $idea->update([
             'title'       => $request->input('title'),
             'description' => $request->input('description'),
             'application' => $request->input('application'),
         ]);
+
+        // LOG : modification d'une idée — état avant et après enregistrés côté serveur
+        ActionLogService::log(
+            action: 'idea_updated',
+            ideaId: $idea->id,
+            dataBefore: $dataBefore,
+            dataAfter: [
+                'title'       => $idea->title,
+                'description' => $idea->description,
+                'application' => $idea->application,
+            ]
+        );
 
         return redirect()
             ->route('ideas.show', $idea)
@@ -113,7 +144,21 @@ class IdeaController extends Controller
     {
         $this->authorize('delete', $idea);
 
+        // Capture de l'état avant suppression pour le log
+        $dataBefore = [
+            'title'       => $idea->title,
+            'description' => $idea->description,
+            'application' => $idea->application,
+        ];
+
         $idea->delete();
+
+        // LOG : suppression d'une idée — enregistré après suppression effective en base
+        ActionLogService::log(
+            action: 'idea_deleted',
+            ideaId: $idea->id,
+            dataBefore: $dataBefore
+        );
 
         return redirect()
             ->route('ideas.index')

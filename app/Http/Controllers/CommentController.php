@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Idea;
 use App\Models\Comment;
+use App\Services\ActionLogService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -26,11 +27,19 @@ class CommentController extends Controller
      */
     public function store(Request $request, Idea $idea)
     {
-        Comment::create([
+        $comment = Comment::create([
             'idea_id'     => $idea->id,
             'user_id'     => Auth::id(),
             'description' => $request->input('description'), // XSS vulnerable
         ]);
+
+        // LOG : création d'un commentaire — enregistré par le serveur après insertion en base
+        ActionLogService::log(
+            action: 'comment_created',
+            ideaId: $idea->id,
+            commentId: $comment->id,
+            dataAfter: ['description' => $comment->description]
+        );
 
         return redirect()
             ->route('ideas.show', $idea)
@@ -58,9 +67,21 @@ class CommentController extends Controller
     {
         $this->authorize('update', $comment);
 
+        // Capture de l'état avant modification pour le log
+        $dataBefore = ['description' => $comment->description];
+
         $comment->update([
             'description' => $request->input('description'),
         ]);
+
+        // LOG : modification d'un commentaire — état avant et après enregistrés côté serveur
+        ActionLogService::log(
+            action: 'comment_updated',
+            ideaId: $idea->id,
+            commentId: $comment->id,
+            dataBefore: $dataBefore,
+            dataAfter: ['description' => $comment->description]
+        );
 
         return redirect()
             ->route('ideas.show', $idea)
@@ -76,7 +97,18 @@ class CommentController extends Controller
     {
         $this->authorize('delete', $comment);
 
+        // Capture de l'état avant suppression pour le log
+        $dataBefore = ['description' => $comment->description];
+
         $comment->delete();
+
+        // LOG : suppression d'un commentaire — enregistré après suppression effective en base
+        ActionLogService::log(
+            action: 'comment_deleted',
+            ideaId: $idea->id,
+            commentId: $comment->id,
+            dataBefore: $dataBefore
+        );
 
         return redirect()
             ->route('ideas.show', $idea)
