@@ -12,13 +12,11 @@ class IdeaPolicy
      */
     public function update(User $user, Idea $idea): bool
     {
-        // TODO
-        return true; // Vulnerable on purpose
+        return $user->isAdmin() || $user->id === $idea->user_id;
     }
 
     public function delete(User $user, Idea $idea): bool
     {
-        // TODO
-        return true;
+        return $user->isAdmin() || $user->id === $idea->user_id;
     }
 }

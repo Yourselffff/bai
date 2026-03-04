@@ -7,11 +7,13 @@ use App\Models\User;
 
 class CommentPolicy
 {
+    public function update(User $user, Comment $comment): bool
+    {
+        return $user->isAdmin() || $user->id === $comment->user_id;
+    }
+
     public function delete(User $user, Comment $comment): bool
     {
-        // TODO: restrict deletion to:
-        // - the comment author
-        // - OR an admin
-        return true; // Vulnerable on purpose
+        return $user->isAdmin() || $user->id === $comment->user_id;
     }
 }

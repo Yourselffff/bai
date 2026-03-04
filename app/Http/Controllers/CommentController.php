@@ -44,11 +44,7 @@ class CommentController extends Controller
      */
     public function edit(Idea $idea, Comment $comment)
     {
-        $user = Auth::user();
-
-        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        $this->authorize('update', $comment);
 
         return view('comments.edit', compact('idea', 'comment'));
     }
@@ -60,11 +56,7 @@ class CommentController extends Controller
      */
     public function update(Request $request, Idea $idea, Comment $comment)
     {
-        $user = Auth::user();
-
-        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        $this->authorize('update', $comment);
 
         $comment->update([
             'description' => $request->input('description'),
@@ -82,11 +74,7 @@ class CommentController extends Controller
      */
     public function destroy(Idea $idea, Comment $comment)
     {
-        $user = Auth::user();
-
-        if ($comment->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        $this->authorize('delete', $comment);
 
         $comment->delete();
 

@@ -79,11 +79,7 @@ class IdeaController extends Controller
      */
     public function edit(Idea $idea)
     {
-        $user = Auth::user();
-
-        if ($idea->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        $this->authorize('update', $idea);
 
         return view('ideas.edit', compact('idea'));
     }
@@ -95,11 +91,7 @@ class IdeaController extends Controller
      */
     public function update(Request $request, Idea $idea)
     {
-        $user = Auth::user();
-
-        if ($idea->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        $this->authorize('update', $idea);
 
         $idea->update([
             'title'       => $request->input('title'),
@@ -119,11 +111,7 @@ class IdeaController extends Controller
      */
     public function destroy(Idea $idea)
     {
-        $user = Auth::user();
-
-        if ($idea->user_id !== $user->id && !$user->isAdmin()) {
-            abort(403, 'Accès non autorisé.');
-        }
+        $this->authorize('delete', $idea);
 
         $idea->delete();
 
