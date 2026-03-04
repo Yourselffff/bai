@@ -2,51 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\File;
+use App\Models\ActionLog;
+use Illuminate\Http\Request;
 
 /**
- * Affichage des logs Laravel.
+ * Affichage des logs d'actions en base de données.
  * Accès réservé aux administrateurs (middleware admin).
  */
 class LogController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $logFile = storage_path('logs/laravel.log');
-        $logs = [];
+        $query = ActionLog::with('user')->latest();
 
-        if (File::exists($logFile)) {
-            // Lire les dernières lignes du fichier efficacement
-            $file = new \SplFileObject($logFile, 'r');
-            $file->seek(PHP_INT_MAX);
-            $totalLines = $file->key();
-
-            // Récupérer les 500 dernières lignes
-            $startLine = max(0, $totalLines - 500);
-            $file->seek($startLine);
-
-            $lines = [];
-            while (!$file->eof()) {
-                $lines[] = $file->fgets();
-            }
-
-            // Parser les logs (format: [2024-01-15 10:30:00] local.WARNING: Message)
-            foreach (array_reverse($lines) as $line) {
-                $line = trim($line);
-                if (preg_match('/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\] \w+\.(\w+): (.*)/', $line, $matches)) {
-                    $logs[] = [
-                        'date' => $matches[1],
-                        'level' => $matches[2],
-                        'message' => \Illuminate\Support\Str::limit($matches[3], 200),
-                    ];
-
-                    // Limiter à 100 entrées
-                    if (count($logs) >= 100) {
-                        break;
-                    }
-                }
-            }
+        // --- Filtre par date ---
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->input('date'));
         }
+
+        // --- Filtre par type d'action ---
+        if ($request->filled('action')) {
+            $query->where('action', $request->input('action'));
+        }
+
+        $logs = $query->paginate(25)->withQueryString();
 
         return view('logs.index', compact('logs'));
     }
